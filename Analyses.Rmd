@@ -1,0 +1,11 @@
+---
+title: "Analyses"
+author: "Ari Cross"
+date: "2024-11-14"
+output: pdf_document
+---
+
+# **Marching to Our Own Beat: The Intersection of Identity and Activism**
+
+\
+This is a study conducted by a course on political psychology within the Psychology Department at Smith College. The aim of this study is to examine the political attitudes of Smith College students and their involvement or uninvolvement in performative activism. Here, I want to perform some analyses on quantitative data obtained from a self-reported Qualtrics survey
