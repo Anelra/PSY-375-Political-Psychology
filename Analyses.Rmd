@@ -9,3 +9,13 @@ output: pdf_document
 
 \
 This is a study conducted by a course on political psychology within the Psychology Department at Smith College. The aim of this study is to examine the political attitudes of Smith College students and their involvement or uninvolvement in performative activism. Here, I want to perform some analyses on quantitative data obtained from a self-reported Qualtrics survey
+
+```{r}
+#import data
+#change to your own file path as needed
+library(readr)
+df <- read_csv("~/Downloads/PSY 375 Data Set - Sheet1.csv")
+View(df)
+```
+
+In the following code chunks I want to make a map plotting the worldly demographics of each of the participants in my study
