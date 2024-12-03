@@ -13,9 +13,219 @@ This is a study conducted by a course on political psychology within the Psychol
 ```{r}
 #import data
 #change to your own file path as needed
+
 library(readr)
-df <- read_csv("~/Downloads/PSY 375 Data Set - Sheet1.csv")
-View(df)
+data <- read_csv("Data/PSY 375 Data Set - Sheet1 (2).csv")
+#View(data)
 ```
 
-In the following code chunks I want to make a map plotting the worldly demographics of each of the participants in my study
+This code chunk is cleaning the 'data' data frame which is the google sheet shared among the researchers within the course.
+
+```{r}
+library(tidyverse)
+library(tidyr)
+#get rid of NAs
+data <- data %>% drop_na(`Please enter your researcher-given pseudonym below`)
+
+#omit cyrus
+data <- data[-c(13), ]
+
+#take only the first 52 rows
+data <- data[1:53, ]
+```
+
+In these code chunks I want to import/clean data from the recorded interviews to prepare them for regression analyses.
+
+```{r}
+#import csv
+library(readr)
+df <- read_csv("~/Downloads/Psy 370- For regressions - Sheet1.csv")
+#View(df)
+```
+
+Cleaning -- converting the color of the county to a numeric value
+
+```{r}
+library(tidyverse)
+df %>% 
+  mutate(county = case_when(`County Color` == 0 ~ "Red",
+                             `County Color` == 1 ~ "Blue"))
+```
+
+Join data frames based on researcher psuedonym
+
+```{r}
+#first replace the blank spaces in df with dashes to match the structure of data 
+df$Interviewee <- df$Interviewee %>%
+  str_replace_all(" ", "-")
+
+#change both column names to match
+df$pseudonym <- df$Interviewee
+data$pseudonym <- data$`Please enter your researcher-given pseudonym below`
+
+#more  cleaning for case sensitivity
+df$pseudonym <- tolower(df$pseudonym)
+data$pseudonym <- tolower(data$pseudonym)
+
+#the data df also has spaces in the pseudonym row
+data$pseudonym <- data$pseudonym %>%
+  str_replace_all(" ", "-")
+
+#pv is missing a dash in the class df
+library(dplyr)
+library(stringr)
+rows_to_modify <- c(32:37)  #specify the rows you want to change
+
+#modify the specified rows
+
+#add a dash between the 2nd and 3rd characters for the specified row
+data$pseudonym[rows_to_modify] <- paste0(
+  substr(data$pseudonym[rows_to_modify], 1, 2), "-",
+  substr(data$pseudonym[rows_to_modify], 3, nchar(data$pseudonym[rows_to_modify]))
+)
+
+#join data frames based on the common key
+joined_df <- inner_join(x = df, y = data, by = "pseudonym")
+```
+
+This code chunk is the regression displaying the linear relationship between whether the county being red or blue is an indicator of one's knowledge of the term performative activism.
+
+```{r}
+library(moderndive)
+
+# Ensure categorical variables are converted to factors
+df$county <- as.factor(df$`County Color`)
+
+# Fit the linear regression model
+model1 <- lm(`PA-knowledge` ~ county, data = df)
+
+
+# View the summary of the model
+summary(model1)
+get_regression_table(model1)
+```
+
+This code chunk is the regression which analyzes the relationship between
+
+```{r}
+model2<- lm(`How much interest do you generally have in what is going on in politics?` ~
+PPA              )
+```
+
+Visualizing
+
+```{r}
+#first I want to create a bar plot that visualizes the distribution of 
+ggplot(df, aes(x=county, y = value)) + 
+  geom_bar(stat = "identity")
+
+```
+
+This code chunk will filter the world.cities df for all of the cities located in
+
+In the following code chunks I want to make a map plotting the worldly demographics of each of the participants in my study.
+
+Cleaning
+
+```{r}
+#load our packages
+library(maps) 
+library(plotly)
+library(ggiraph)
+library(widgetframe)
+data(world.cities)
+
+#doing some cleaning of my df
+city_list <- joined_df %>%
+  #split the "cities" column into separate rows
+  separate_rows(`In what city, state, and country did you spend most of your time when you were growing up?`, sep = ", ") %>%
+  #extract unique city names
+  distinct(`In what city, state, and country did you spend most of your time when you were growing up?`)
+
+#clean the name column -- it contains a ` that won't be compatible with the search column
+#filter the world.cities data frame
+filtered_cities <- world.cities %>%
+  filter(name %in% city_list$`In what city, state, and country did you spend most of your time when you were growing up?`)
+
+#view the result
+print(filtered_cities)
+#extract the specific row from the larger data frame
+row_to_add <- world.cities[16196, ]
+
+#add jerusalem
+filtered_cities <- rbind(filtered_cities, row_to_add)
+#success
+#it looks like it grabbed every double as well so lets filter for what countries actually exist in our df which is ("USA", "Belgium", "Mexico", "Israel")
+filtered_cities <- filtered_cities %>% filter(country.etc %in% c("USA", "Belgium", "Mexico", "Israel"))
+```
+
+Plotting
+
+```{r}
+
+#create a data frame that is filtered by the city names exiting in the joined df 
+caps <- dplyr::filter(world.cities, capital == 1)
+caps$population <- prettyNum(caps$pop, big.mark = ",")
+plot <- suppressWarnings(figure(width = 800, height = 450, padding_factor = 0) %>%
+  ly_map("world", col = "gray") %>%
+  ly_points(long, lat, data = caps, size = 5,
+            hover = c(name, country.etc, population)))
+
+widgetframe::frameWidget(plot,width=600,height=400)
+
+
+# Load required libraries
+library(ggplot2)
+library(maps)
+
+# Get world map data
+world <- map_data("world")
+
+# Create the plot
+ggplot() +
+  geom_polygon(data = world, aes(x = long, y = lat, group = group), fill = "lightgray", color = "white") +
+  geom_point(data = filtered_cities, aes(x = long, y = lat), color = "red", size = 2) +
+  theme_minimal() +
+  labs(title = "PSY 375 Study Participant Hometowns", x = "Longitude", y = "Latitude")
+
+```
+
+```{r}
+library(ggplot2)
+library(maps)
+library(ggthemes) # For additional themes
+
+# World map data
+world <- map_data("world")
+
+# Enhanced plot
+ggplot() +
+  # Draw the world map with subtle styling
+  geom_polygon(data = world, aes(x = long, y = lat, group = group), 
+               fill = "lightblue", color = "gray70") +
+  
+  # Add city points
+  geom_point(data = filtered_cities, aes(x = long, y = lat), 
+             color = "darkred", size = 3, alpha = 0.8, shape = 21, fill = "red") +
+  
+  # Add city labels
+  geom_text(data = filtered_cities, aes(x = long, y = lat, label = name), 
+            color = "black", size = 3, nudge_y = 2) +
+  
+  # Improve theme
+  theme_minimal(base_size = 14) +
+  theme(
+    panel.background = element_rect(fill = "aliceblue", color = NA),
+    plot.title = element_text(face = "bold", hjust = 0.5),
+    plot.margin = margin(10, 10, 10, 10)
+  ) +
+  
+  # Add titles and labels
+  labs(
+    title = "PSY 375 Study Participant Hometowns",
+    subtitle = "",
+    x = "Longitude",
+    y = "Latitude"
+  )
+
+```
