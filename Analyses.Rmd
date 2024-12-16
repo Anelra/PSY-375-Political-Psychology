@@ -53,7 +53,7 @@ df %>%
   mutate(county = case_when(`County Color` == 0 ~ "Red",
                              `County Color` == 1 ~ "Blue"))
 
-# Ensure categorical variables are converted to factors
+#ensure categorical variables are converted to factors
 df$county <- as.factor(df$`County Color`)
 ```
 
@@ -114,6 +114,7 @@ county_PAknowledge_model <- lm(`PA-knowledge` ~ county, data = df)
 
 #view the summary of the model
 get_regression_table(county_PAknowledge_model)
+stargazer(county_PAknowledge_model, type = "html", out = "county_PAknowledge_model.html")
 ```
 
 ```{r}
@@ -121,6 +122,18 @@ ggplot(data = df, aes(x = county, y = `PA-knowledge`))+
   geom_jitter()+
   #the second equation will have both the x and the y variables
   geom_smooth(method = lm, formula = y ~ x, se = FALSE)
+
+ggplot(df, aes(x = county, y = `PA-knowledge`, color = county)) +
+  geom_jitter() +
+  geom_parallel_slopes(se = FALSE) +
+  geom_smooth(method = lm, formula = y ~ x, se = FALSE) +
+  scale_color_manual(values = c("Red" = "red", "Blue" = "blue")) +
+  labs(
+    x = "Present County Color",  
+    y = "Knowledge of the term 'Performative Activism'",  
+    color = "Legend Title"     
+  ) +
+  theme_minimal()
 ```
 
 This code chunk is the regression which analyzes the relationship between color of county lived in and participation in performative activism
@@ -132,6 +145,7 @@ county_PPA_model <- lm(PPA ~ county, data = joined_df)
 
 #view the summary of the model
 get_regression_table(county_PPA_model)
+stargazer(county_PPA_model, type = "html", out = "county_PPA_model.html")
 ```
 
 Plot the relationship between color of county lived in and participation in performative activism
@@ -141,6 +155,21 @@ ggplot(joined_df, aes(x = county, y = PPA, color = county))+
   geom_jitter()+
   geom_parallel_slopes(se = FALSE)+
   geom_smooth(method = lm, formula = y ~ x, se = FALSE)
+```
+
+```{r}
+ggplot(joined_df, aes(x = county, y = PPA, color = county)) +
+  geom_jitter() +
+  geom_parallel_slopes(se = FALSE) +
+  geom_smooth(method = lm, formula = y ~ x, se = FALSE) +
+  scale_color_manual(values = c("Red" = "red", "Blue" = "blue")) +
+  labs(
+    x = "Color of County's Voting Majority 2024",  
+    y = "Participation in Performative Activism",  
+    color = "Legend Title"      
+  ) +
+  theme_minimal()
+
 ```
 
 This code chunk is the regression which analyzes the relationship between interest in politics as a function of class
@@ -170,16 +199,24 @@ This code chunk is the regression which analyzes the relationship between the am
 county_PPA_model
 
 ```{r}
-
+library(stargazer)
 #fit the linear regression model
 interest_political_ideology_model <- lm(`How much interest do you have in what is going on in Gaza right now?`~ `How would you characterize your political ideology: - during college (now)?`, data = joined_df)
 #view the summary of the model
 get_regression_table(interest_political_ideology_model)
+interest_political_ideology_reg <- stargazer(interest_political_ideology_model, type = "text")
+stargazer(interest_political_ideology_model, type = "html", out = "interest_political_ideology_model.html")
+
 ```
 
 ```{r}
 ggplot(data = joined_df, aes(x = `How would you characterize your political ideology: - during college (now)?`, y = `How much interest do you have in what is going on in Gaza right now?`))+
   geom_jitter()+
+  labs(
+    x = "How would you characterize your political ideology now (Extremely Liberal-Extremely Conservative)", 
+    y = "How interested are you in what is going on in Gaza right now?",  
+    color = "Legend Title" 
+  ) +
   #the second equation will have both the x and the y variables
   geom_smooth(method = lm, formula = y ~ x, se = FALSE)
 ```
